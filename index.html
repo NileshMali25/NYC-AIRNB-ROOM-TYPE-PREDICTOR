@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>NYC Airbnb — Room Type Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- Background animated canvas -->
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="app-wrapper">
+        <!-- Hero Header -->
+        <header class="hero-section">
+            <div class="badge-pill">
+                <span class="badge-dot pulse-teal"></span>
+                <span>NYC AIRBNB — ROOM TYPE PREDICTOR</span>
+            </div>
+            <h1 class="hero-title">What kind of stay<br class="desktop-break"> is this listing?</h1>
+            <p class="hero-desc">
+                Enter a listing's details and the model will predict whether it's an entire home, a private room, or a shared room — the way the city lights up differently behind each kind of door.
+            </p>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Card: Listing Details Form -->
+            <div class="glass-card form-card">
+                <div class="card-header">
+                    <h2 class="card-title">Listing details</h2>
+                    <button type="button" id="exampleBtn" class="btn-ghost" title="Load a real NYC listing example">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                        <span>Try an example</span>
+                    </button>
+                </div>
+
+                <form id="predictionForm" autocomplete="off">
+                    <!-- Section: Location -->
+                    <div class="form-section">
+                        <span class="section-label">LOCATION</span>
+                        <div class="form-row two-cols">
+                            <div class="input-group">
+                                <label for="latitude">Latitude</label>
+                                <input type="number" step="any" inputmode="decimal" id="latitude" name="latitude" placeholder="40.7128" required value="40.7144" />
+                            </div>
+                            <div class="input-group">
+                                <label for="longitude">Longitude</label>
+                                <input type="number" step="any" inputmode="decimal" id="longitude" name="longitude" placeholder="-74.0060" required value="-73.9554" />
+                            </div>
+                        </div>
+
+                        <div class="form-row two-cols">
+                            <div class="input-group">
+                                <label for="neighbourhood_group">Borough</label>
+                                <div class="custom-select-wrapper">
+                                    <select id="neighbourhood_group" name="neighbourhood_group" required>
+                                        <option value="Manhattan">Manhattan</option>
+                                        <option value="Brooklyn" selected>Brooklyn</option>
+                                        <option value="Queens">Queens</option>
+                                        <option value="Bronx">Bronx</option>
+                                        <option value="Staten Island">Staten Island</option>
+                                    </select>
+                                    <span class="select-arrow">&#9662;</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="neighbourhood">Neighbourhood</label>
+                                <input type="text" id="neighbourhood" name="neighbourhood" placeholder="e.g. Williamsburg" required value="Williamsburg" list="neighbourhoodList" />
+                                <datalist id="neighbourhoodList">
+                                    <option value="Williamsburg"></option>
+                                    <option value="Harlem"></option>
+                                    <option value="Upper West Side"></option>
+                                    <option value="East Village"></option>
+                                    <option value="Midtown"></option>
+                                    <option value="Bedford-Stuyvesant"></option>
+                                    <option value="Bushwick"></option>
+                                    <option value="Astoria"></option>
+                                    <option value="Greenwich Village"></option>
+                                    <option value="SoHo"></option>
+                                    <option value="Crown Heights"></option>
+                                    <option value="DUMBO"></option>
+                                    <option value="Long Island City"></option>
+                                </datalist>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Pricing & Stay -->
+                    <div class="form-section">
+                        <span class="section-label">PRICING &amp; STAY</span>
+                        <div class="form-row two-cols">
+                            <div class="input-group">
+                                <label for="price">Price per night (USD)</label>
+                                <input type="number" step="any" min="1" inputmode="decimal" id="price" name="price" placeholder="150" required value="195" />
+                            </div>
+                            <div class="input-group">
+                                <label for="minimum_nights">Minimum nights</label>
+                                <input type="number" min="1" max="365" inputmode="numeric" id="minimum_nights" name="minimum_nights" placeholder="3" required value="3" />
+                            </div>
+                        </div>
+
+                        <div class="form-row single-col">
+                            <div class="slider-group">
+                                <div class="slider-header">
+                                    <label for="availability_365">Days available per year</label>
+                                    <div class="slider-value-badge">
+                                        <span id="availDisplay">180</span> / 365 days
+                                    </div>
+                                </div>
+                                <div class="range-wrap">
+                                    <input type="range" id="availability_365" name="availability_365" min="0" max="365" value="180" aria-label="Days available per year" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Reviews & Host -->
+                    <div class="form-section">
+                        <span class="section-label">REVIEWS &amp; HOST</span>
+                        <div class="form-row two-cols">
+                            <div class="input-group">
+                                <label for="number_of_reviews">Total reviews</label>
+                                <input type="number" min="0" inputmode="numeric" id="number_of_reviews" name="number_of_reviews" placeholder="24" required value="32" />
+                            </div>
+                            <div class="input-group">
+                                <label for="reviews_per_month">Reviews per month</label>
+                                <input type="number" step="any" min="0" inputmode="decimal" id="reviews_per_month" name="reviews_per_month" placeholder="1.2" required value="1.6" />
+                            </div>
+                        </div>
+
+                        <div class="form-row single-col">
+                            <div class="input-group">
+                                <label for="calculated_host_listings_count">Listings by this host</label>
+                                <input type="number" min="1" inputmode="numeric" id="calculated_host_listings_count" name="calculated_host_listings_count" placeholder="1" required value="1" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="predictBtn" class="btn-primary glow-button">
+                        <span class="btn-text">Predict room type</span>
+                        <span class="spinner hidden"></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Card: Prediction Visualizer -->
+            <div class="glass-card prediction-card" id="predictionCard">
+                <div class="card-header">
+                    <h2 class="card-title">Prediction</h2>
+                    <div class="status-pill" id="apiStatus">
+                        <span class="status-dot pulse" id="statusDot"></span>
+                        <span class="status-text" id="statusText">Checking API...</span>
+                    </div>
+                </div>
+
+                <div class="prediction-content">
+                    <!-- Empty State -->
+                    <div id="emptyState" class="empty-state">
+                        <div class="bar-graphic-placeholder" aria-hidden="true">
+                            <div class="pbar b1"></div>
+                            <div class="pbar b2"></div>
+                            <div class="pbar b3"></div>
+                        </div>
+                        <p class="empty-text">
+                            Fill in the listing details and tap predict to see the city light up.
+                        </p>
+                    </div>
+
+                    <!-- Active Result State -->
+                    <div id="resultState" class="result-state hidden">
+                        <div class="winner-banner" id="winnerBanner">
+                            <div class="winner-icon-wrap" id="winnerIcon">🏡</div>
+                            <div class="winner-details">
+                                <span class="winner-subtitle">PREDICTED ROOM TYPE</span>
+                                <h3 class="winner-name" id="winnerName">Entire home/apt</h3>
+                                <div class="confidence-badge" id="winnerConfidence">88% Confidence</div>
+                            </div>
+                        </div>
+
+                        <!-- Probability Distribution Bars -->
+                        <div class="probabilities-section">
+                            <h4 class="prob-title">Probability Breakdown</h4>
+
+                            <!-- Class 1: Entire home/apt -->
+                            <div class="prob-row" id="rowEntire">
+                                <div class="prob-labels">
+                                    <span class="prob-name"><span class="dot dot-entire"></span> Entire home/apt</span>
+                                    <span class="prob-val" id="valEntire">0%</span>
+                                </div>
+                                <div class="prob-track">
+                                    <div class="prob-fill entire-fill" id="barEntire" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Class 2: Private room -->
+                            <div class="prob-row" id="rowPrivate">
+                                <div class="prob-labels">
+                                    <span class="prob-name"><span class="dot dot-private"></span> Private room</span>
+                                    <span class="prob-val" id="valPrivate">0%</span>
+                                </div>
+                                <div class="prob-track">
+                                    <div class="prob-fill private-fill" id="barPrivate" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Class 3: Shared room -->
+                            <div class="prob-row" id="rowShared">
+                                <div class="prob-labels">
+                                    <span class="prob-name"><span class="dot dot-shared"></span> Shared room</span>
+                                    <span class="prob-val" id="valShared">0%</span>
+                                </div>
+                                <div class="prob-track">
+                                    <div class="prob-fill shared-fill" id="barShared" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Listing Insight / Summary -->
+                        <div class="insight-box" id="insightBox">
+                            <div class="insight-icon">💡</div>
+                            <p class="insight-text" id="insightText">
+                                High nightly price and standard whole-home availability align strongly with full-apartment occupancy in this neighbourhood.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer with Skyline Silhouette -->
+        <footer class="skyline-footer">
+            <div class="skyline-silhouette">
+                <svg class="skyline-svg" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="skylineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#111a2c" stop-opacity="0.95" />
+                            <stop offset="100%" stop-color="#080c14" stop-opacity="1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M0,180 L0,120 L35,120 L35,90 L70,90 L70,130 L110,130 L110,75 L145,75 L145,140 L180,140 L180,85 L210,85 L210,60 L235,60 L235,35 L250,35 L250,60 L275,60 L275,145 L310,145 L310,85 L350,85 L350,130 L390,130 L390,105 L430,105 L430,55 L460,55 L460,140 L500,140 L500,90 L535,90 L535,125 L570,125 L570,65 L600,65 L600,30 L615,30 L615,65 L645,65 L645,130 L685,130 L685,100 L725,100 L725,45 L765,45 L765,140 L800,140 L800,80 L840,80 L840,120 L880,120 L880,70 L920,70 L920,35 L935,10 L950,35 L950,70 L990,70 L990,135 L1030,135 L1030,85 L1070,85 L1070,120 L1110,120 L1110,60 L1145,60 L1145,140 L1185,140 L1185,95 L1225,95 L1225,125 L1265,125 L1265,75 L1305,75 L1305,130 L1345,130 L1345,105 L1385,105 L1385,140 L1440,140 L1440,180 Z" fill="url(#skylineGrad)"/>
+                </svg>
+                <div class="skyline-windows" id="skylineWindows"></div>
+            </div>
+            <p class="footer-credits">Model served via FastAPI &amp; scikit-learn · trained on NYC Airbnb listing data</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
