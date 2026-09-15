@@ -11,15 +11,6 @@ A sleek, responsive machine learning web application that predicts the Airbnb ro
 
 ---
 
-## 🔗 Live Demo
-
-Experience the live application deployed on Render:
-👉 **[Launch NYC Airbnb Room Type Predictor](https://nyc-airnb-room-type-predictor.onrender.com/)**
-
-*(Note: Free-tier instances may take 30–50 seconds to spin up on the initial request after a period of inactivity).*
-
----
-
 ## Features
 
 - **Intuitive UI & Dark Theme**: Custom glassmorphic interface with real-time confidence scores and dynamic insight generator.
